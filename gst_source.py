@@ -9,7 +9,7 @@ import json
 import time
 
 import captcha_solver
-from http_client import SourceError, new_session, request
+from http_client import SourceError, new_session, request, require_image
 
 BASE = "https://services.gst.gov.in"
 PAGE = BASE + "/services/searchtp"
@@ -55,11 +55,20 @@ def lookup(gstin: str) -> dict:
     """One full attempt. Raises SourceError('captcha') when the code is wrong."""
     session = new_session(PAGE)
     session.headers["Accept"] = "application/json, text/plain, */*"
-    request(session, "GET", PAGE)
+    page = request(session, "GET", PAGE)
+    if page.status_code != 200:
+        raise SourceError("site", "search page returned HTTP %s" % page.status_code)
+
     captcha = request(session, "GET", CAPTCHA % ("%d" % int(time.time() * 1000)))
+    ctype = require_image(captcha)
+
     readings = captcha_solver.solve(captcha.content, captcha_solver.DIGITS)
     if not readings:
-        raise SourceError("captcha", "could not read the captcha")
+        raise SourceError(
+            "captcha",
+            "could not read the captcha (%s, %d bytes)"
+            % (ctype, len(captcha.content)),
+        )
     code = readings[0][0]
 
     response = request(

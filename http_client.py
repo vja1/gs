@@ -79,3 +79,17 @@ def request(session: requests.Session, method: str, url: str, **kwargs):
     if last_resp is not None:
         return last_resp
     raise SourceError("network", str(last_exc))
+
+
+def require_image(resp, label: str = "captcha") -> str:
+    """Validate an image HTTP response and return its media type."""
+    ctype = (resp.headers.get("Content-Type") or "").split(";")[0].strip()
+    if resp.status_code != 200 or not ctype.lower().startswith("image/"):
+        raise SourceError(
+            "site",
+            "%s endpoint returned HTTP %s (%s, %d bytes)"
+            % (label, resp.status_code, ctype or "unknown", len(resp.content)),
+        )
+    if not resp.content:
+        raise SourceError("site", "%s endpoint returned empty body" % label)
+    return ctype

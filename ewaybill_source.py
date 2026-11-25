@@ -11,7 +11,7 @@ import re
 from bs4 import BeautifulSoup
 
 import captcha_solver
-from http_client import SourceError, new_session, request
+from http_client import SourceError, new_session, request, require_image
 
 BASE = "https://ewaybillgst.gov.in"
 PAGE = BASE + "/Others/TaxPayerSearch.aspx"
@@ -151,9 +151,15 @@ def lookup(gstin: str) -> dict:
 
     fields = _hidden(page.text)
     captcha = request(session, "GET", CAPTCHA)
+    ctype = require_image(captcha)
+
     readings = captcha_solver.solve(captcha.content)
     if not readings:
-        raise SourceError("captcha", "could not read the captcha")
+        raise SourceError(
+            "captcha",
+            "could not read the captcha (%s, %d bytes)"
+            % (ctype, len(captcha.content)),
+        )
     code = readings[0][0]
 
     payload = {

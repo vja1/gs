@@ -111,7 +111,8 @@ def lookup(gstin: str):
     if not valid:
         return jsonify(success=False, error="invalid_gstin", reason=reason), 400
 
-    source = request.args.get("source", "auto").lower()
+    default_source = os.getenv("DEFAULT_SOURCE", "auto").strip().lower() or "auto"
+    source = request.args.get("source", default_source).lower()
     try:
         attempts = max(1, min(int(request.args.get("attempts", 8)), 25))
     except ValueError:
