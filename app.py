@@ -88,7 +88,7 @@ def index():
     return jsonify(
         service="gstin-lookup",
         endpoints={
-            "lookup": "/lookup/<GSTIN>?source=auto|ewaybill|gst&attempts=8",
+            "lookup": "/lookup/<GSTIN>?source=auto|ewaybill|gst&attempts=15",
             "health": "/health",
         },
         example="/lookup/27AAACT2727Q1ZW",
@@ -113,8 +113,9 @@ def lookup(gstin: str):
 
     default_source = os.getenv("DEFAULT_SOURCE", "auto").strip().lower() or "auto"
     source = request.args.get("source", default_source).lower()
+    default_attempts = int(os.getenv("DEFAULT_ATTEMPTS", "15"))
     try:
-        attempts = max(1, min(int(request.args.get("attempts", 8)), 25))
+        attempts = max(1, min(int(request.args.get("attempts", default_attempts)), 25))
     except ValueError:
         return jsonify(success=False, error="bad_request", reason="attempts must be a number"), 400
 

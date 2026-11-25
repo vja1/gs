@@ -10,6 +10,8 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.8"
+      - key: DEFAULT_SOURCE
+        value: "gst"
       - key: CACHE_TTL
         value: "3600"
       - key: RATE_LIMIT_PER_MIN
